@@ -1,7 +1,7 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KerbalChangelog", "KerbalChangelog.csproj", "{97EEA329-3D97-4352-B1E6-C05EA540D637}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KerbalChangelog", "Source\KerbalChangelog.csproj", "{97EEA329-3D97-4352-B1E6-C05EA540D637}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

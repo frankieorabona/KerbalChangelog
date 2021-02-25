@@ -1,22 +1,6 @@
-# Autosave files
-*~
-*.swp
-*.bak
-
-# build
-[Oo]bj/
-[Bb]in/
-.vs/
-
-# globs
-.idea/
-*.DS_Store
-*.suo
-*.pdb
-*.userprefs
-
-# KSP dlls
-Assembly-Csharp.dll
-Assembly-Csharp-firstpass.dll
-UnityEngine.dll
-UnityEngine.UI.dll
+Source/KSP_Data
+obj/
+*.dll
+*.xml
+*.zip
+*.gpg

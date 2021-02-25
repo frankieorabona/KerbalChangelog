@@ -1,0 +1,90 @@
+<Project>
+  <PropertyGroup>
+    <AssemblyName>KerbalChangelog</AssemblyName>
+    <GameDataPath>..\GameData\</GameDataPath>
+    <ChangelogFile>$(GameDataPath)$(AssemblyName)\$(AssemblyName)-Changelog.cfg</ChangelogFile>
+    <SettingsFile>$(GameDataPath)$(AssemblyName)\$(AssemblyName)Settings.cfg</SettingsFile>
+    <ZipFile>..\$(AssemblyName).zip</ZipFile>
+    <OutDir>$(GameDataPath)$(AssemblyName)\Plugins\</OutDir>
+    <BaseIntermediateOutputPath>..\obj\</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>..\obj\</IntermediateOutputPath>
+    <Configuration>Release</Configuration>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <PropertyGroup>
+    <RootNamespace>KerbalChangelog</RootNamespace>
+    <ProjectGuid>{97EEA329-3D97-4352-B1E6-C05EA540D637}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>7.3</LangVersion>
+    <TargetFramework>net47</TargetFramework>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <Optimize>true</Optimize>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
+    <DocumentationFile>$(IntermediateOutputPath)$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <HintPath>KSP_Data\Managed\System.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>KSP_Data\Managed\System.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>KSP_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>KSP_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>KSP_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Target Name="DeleteXMLDocs" AfterTargets="Build">
+    <Delete Files="$(OutDir)$(AssemblyName).xml" />
+  </Target>
+  <Target Name="MakeZip">
+    <PropertyGroup>
+      <Changelog>$([System.IO.File]::ReadAllText($(ChangelogFile)))</Changelog>
+    </PropertyGroup>
+    <WriteLinesToFile Condition="!$(Changelog.Contains('showChangelog = True'))"
+                      File="$(ChangelogFile)"
+                      Lines="$(Changelog.Replace('showChangelog = False', 'showChangelog = True'))"
+                      Overwrite="true" />
+    <Delete Files="$(SettingsFile)" />
+    <ZipDirectory SourceDirectory="$(GameDataPath)"
+                  DestinationFile="$(ZipFile)"
+                  OverWrite="true" />
+  </Target>
+  <Target Name="CleanMore" AfterTargets="Clean">
+    <RemoveDir Directories="$(BaseIntermediateOutputPath)" />
+    <Delete Files="$(ZipFile)" />
+  </Target>
+</Project>
