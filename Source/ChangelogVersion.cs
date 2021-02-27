@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using KSP.Localization;
 
 namespace KerbalChangelog
 {
@@ -138,11 +139,55 @@ namespace KerbalChangelog
 		/// </returns>
 		public override string ToString()
 		{
-			if (versionNull)
-				return "D.N.E";
-			if (!buildExisted)
-				return $"{major}.{minor}.{patch}" + (versionNameExists ? " \"" + versionName + "\"" : "") + (versionDateExists ? ", released " + versionDate : "") + (versionKSPExists ? ", for KSP version " + versionKSP : "");
-			return $"{major}.{minor}.{patch}.{build}" + (versionNameExists ? " \"" + versionName + "\"" : "") + (versionDateExists ? ", released " + versionDate : "") + (versionKSPExists ? ", for KSP version " + versionKSP : "");
+			return versionNull
+				? Localizer.Format("KerbalChangelog_versionDoesNotExist")
+				: buildExisted
+					? versionNameExists
+						? versionDateExists
+							? versionKSPExists
+								? Localizer.Format("KerbalChangelog_versionFourPieceWithNameDateCompat",
+									major, minor, patch, build, versionName, versionDate, versionKSP)
+								: Localizer.Format("KerbalChangelog_versionFourPieceWithNameDate",
+									major, minor, patch, build, versionName, versionDate)
+							: versionKSPExists
+								? Localizer.Format("KerbalChangelog_versionFourPieceWithNameCompat",
+									major, minor, patch, build, versionName, versionKSP)
+								: Localizer.Format("KerbalChangelog_versionFourPieceWithName",
+									major, minor, patch, build, versionName)
+						: versionDateExists
+							? versionKSPExists
+								? Localizer.Format("KerbalChangelog_versionFourPieceWithDateCompat",
+									major, minor, patch, build, versionDate, versionKSP)
+								: Localizer.Format("KerbalChangelog_versionFourPieceWithDate",
+									major, minor, patch, build, versionDate)
+							: versionKSPExists
+								? Localizer.Format("KerbalChangelog_versionFourPieceWithCompat",
+									major, minor, patch, build, versionKSP)
+								: Localizer.Format("KerbalChangelog_versionFourPiece",
+									major, minor, patch, build)
+					: versionNameExists
+						? versionDateExists
+							? versionKSPExists
+								? Localizer.Format("KerbalChangelog_versionThreePieceWithNameDateCompat",
+									major, minor, patch, versionName, versionDate, versionKSP)
+								: Localizer.Format("KerbalChangelog_versionThreePieceWithNameDate",
+									major, minor, patch, versionName, versionDate)
+							: versionKSPExists
+								? Localizer.Format("KerbalChangelog_versionThreePieceWithNameCompat",
+									major, minor, patch, versionName, versionKSP)
+								: Localizer.Format("KerbalChangelog_versionThreePieceWithName",
+									major, minor, patch, versionName)
+						: versionDateExists
+							? versionKSPExists
+								? Localizer.Format("KerbalChangelog_versionThreePieceWithDateCompat",
+									major, minor, patch, versionDate, versionKSP)
+								: Localizer.Format("KerbalChangelog_versionThreePieceWithDate",
+									major, minor, patch, versionDate)
+							: versionKSPExists
+								? Localizer.Format("KerbalChangelog_versionThreePieceWithCompat",
+									major, minor, patch, versionKSP)
+								: Localizer.Format("KerbalChangelog_versionThreePiece",
+									major, minor, patch);
 		}
 
 		/// <returns>
@@ -150,11 +195,13 @@ namespace KerbalChangelog
 		/// </returns>
 		public string ToStringPure()
 		{
-			if (versionNull)
-				return "D.N.E";
-			if (!buildExisted)
-				return $"{major}.{minor}.{patch}";
-			return $"{major}.{minor}.{patch}.{build}";
+			return versionNull
+				? Localizer.Format("KerbalChangelog_versionDoesNotExist")
+				: buildExisted
+					? Localizer.Format("KerbalChangelog_versionFourPiece",
+						major, minor, patch, build)
+					: Localizer.Format("KerbalChangelog_versionThreePiece",
+						major, minor, patch);
 		}
 
 		/// <returns>
@@ -162,11 +209,19 @@ namespace KerbalChangelog
 		/// </returns>
 		public string ToStringVersionName()
 		{
-			if (versionNull)
-				return "D.N.E";
-			if (!buildExisted)
-				return $"{major}.{minor}.{patch}" + (versionNameExists ? " \"" + versionName + "\"" : "");
-			return $"{major}.{minor}.{patch}" + (versionNameExists ? " \"" + versionName + "\"" : "");
+			return versionNull
+				? Localizer.Format("KerbalChangelog_versionDoesNotExist")
+				: buildExisted
+					? versionNameExists
+						? Localizer.Format("KerbalChangelog_versionFourPieceWithName",
+							major, minor, patch, build, versionName)
+						: Localizer.Format("KerbalChangelog_versionFourPiece",
+							major, minor, patch, build)
+					: versionNameExists
+						? Localizer.Format("KerbalChangelog_versionThreePieceWithName",
+							major, minor, patch, versionName)
+						: Localizer.Format("KerbalChangelog_versionThreePiece",
+							major, minor, patch);
 		}
 
 		/// <summary>

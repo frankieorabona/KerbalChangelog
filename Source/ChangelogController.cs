@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.Localization;
 
 namespace KerbalChangelog
 {
@@ -81,7 +82,7 @@ namespace KerbalChangelog
 					89157,
 					displayWindow,
 					DrawChangelogSelection,
-					"Kerbal Changelog",
+					Localizer.Format("KerbalChangelog_listingTitle"),
 					skin.window,
 					GUILayout.Width(windowWidth),
 					GUILayout.Height(windowHeight)
@@ -95,7 +96,7 @@ namespace KerbalChangelog
 			GUILayout.BeginHorizontal();
 			if (dispcl.webpageValid)
 			{
-				if (GUILayout.Button("Visit this mod's website", skin.button))
+				if (GUILayout.Button(Localizer.Format("KerbalChangelog_webpageButtonCaption"), skin.button))
 				{
 					Application.OpenURL("https://" + dispcl.webpage);
 				}
@@ -103,12 +104,12 @@ namespace KerbalChangelog
 			GUILayout.FlexibleSpace();
 			if (changelogs.Count > 1)
 			{
-				if (GUILayout.Button("Select changelogs", skin.button))
+				if (GUILayout.Button(Localizer.Format("KerbalChangelog_listingButtonCaption"), skin.button))
 				{
 					changelogSelection = true;
 				}
 			}
-			if (GUILayout.Button("Skin", skin.button))
+			if (GUILayout.Button(Localizer.Format("KerbalChangelog_skinButtonCaption"), skin.button))
 			{
 				skin = skin == HighLogic.Skin ? GUI.skin : HighLogic.Skin;
 				settings.skinName = skin.name;
@@ -131,18 +132,18 @@ namespace KerbalChangelog
 			GUILayout.BeginHorizontal();
 			if (changelogs.Count > 1)
 			{
-				if (GUILayout.Button("Previous", skin.button))
+				if (GUILayout.Button(Localizer.Format("KerbalChangelog_prevButtonCaption"), skin.button))
 				{
 					dispIndex = (dispIndex + changelogs.Count - 1) % changelogs.Count;
 				}
 			}
-			if (GUILayout.Button("Close", skin.button))
+			if (GUILayout.Button(Localizer.Format("KerbalChangelog_closeButtonCaption"), skin.button))
 			{
 				showChangelog = false;
 			}
 			if (changelogs.Count > 1)
 			{
-				if (GUILayout.Button("Next", skin.button))
+				if (GUILayout.Button(Localizer.Format("KerbalChangelog_nextButtonCaption"), skin.button))
 				{
 					dispIndex = (dispIndex + 1) % changelogs.Count;
 				}
@@ -157,18 +158,18 @@ namespace KerbalChangelog
 			GUILayout.FlexibleSpace();
 			var startHere = WorkingToggle(
 				settings.defaultChangelogSelection,
-				"Start here"
+				Localizer.Format("KerbalChangelog_startHereCheckboxCaption")
 			);
 			if (startHere != settings.defaultChangelogSelection)
 			{
 				settings.defaultChangelogSelection = startHere;
 				settings.Save();
 			}
-			if (GUILayout.Button("Read changelogs", skin.button))
+			if (GUILayout.Button(Localizer.Format("KerbalChangelog_closeListingButtonCaption"), skin.button))
 			{
 				changelogSelection = false;
 			}
-			if (GUILayout.Button("Skin", skin.button))
+			if (GUILayout.Button(Localizer.Format("KerbalChangelog_skinButtonCaption"), skin.button))
 			{
 				skin = skin == HighLogic.Skin ? GUI.skin : HighLogic.Skin;
 				settings.skinName = skin.name;
@@ -186,7 +187,7 @@ namespace KerbalChangelog
 				}
 			}
 			GUILayout.EndScrollView();
-			if (GUILayout.Button("Close", skin.button))
+			if (GUILayout.Button(Localizer.Format("KerbalChangelog_closeButtonCaption"), skin.button))
 			{
 				showChangelog = false;
 			}
