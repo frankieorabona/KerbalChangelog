@@ -126,6 +126,11 @@ namespace KerbalChangelog
 			GUILayout.Label(dispcl.Body(), new GUIStyle(skin.label)
 			{
 				richText = true,
+				normal   = new GUIStyleState()
+				{
+					textColor  = skin.textArea.normal.textColor,
+					background = skin.label.normal.background,
+				},
 			});
 
 			GUILayout.EndScrollView();
