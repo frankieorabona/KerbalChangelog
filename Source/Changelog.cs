@@ -145,7 +145,7 @@ namespace KerbalChangelog
 		/// <param name="versionsSeen">The versions the user has already seen, will be excluded from the display</param>
 		public string Body(List<string> versionsSeen)
 		{
-			return string.Join("\n", changeSets
+			return string.Join("\n", versionsSeen == null ? changeSets : changeSets
 				.Where(cs => !versionsSeen.Contains(cs.version.ToStringPure()))
 				.ToList());
 		}

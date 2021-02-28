@@ -8,50 +8,41 @@ namespace KerbalChangelog
 	using MonoBehavior = MonoBehaviour;
 
 	/// <summary>
-	/// The overall mod behavior
+	/// Manages the popup window with the changelog info,
+	/// based on info received in the public fields
 	/// </summary>
-	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
 	public class ChangelogController : MonoBehavior
 	{
+		/// <summary>
+		/// Settings to use
+		/// </summary>
+		public ChangelogSettings settings;
+
+		/// <summary>
+		/// Changelogs to display
+		/// </summary>
+		public List<Changelog> changelogs;
+
+		/// <summary>
+		/// Whether to limit the display to things the user hasn't seen before
+		/// </summary>
+		public bool onlyNewChanges = true;
+
 		private void Start()
 		{
 			Debug.Log("[KCL] Starting up");
-			settings = new ChangelogSettings(GameDatabase.Instance);
 			// Set up the window
 			displayWindow = new Rect(
 				(Screen.width  - windowWidth)  / (2 * GameSettings.UI_SCALE),
 				(Screen.height - windowHeight) / (2 * GameSettings.UI_SCALE),
 				windowWidth, windowHeight
 			);
-			changelogs = LoadChangelogs(GameDatabase.Instance).ToList();
-			for (int i = changelogs.Count - 1; i >= 0; --i)
-			{
-				var cl = changelogs[i];
-				if (cl.alreadySeen)
-				{
-					// A previous version displayed these changes,
-					// mark them as seen so they'll be hidden in the next update
-					foreach (var cs in cl.versions)
-					{
-						settings.SetSeen(cl.modName, cs, true);
-					}
-					changelogs.Remove(cl);
-				}
-			}
 			Debug.Log("[KCL] Displaying " + changelogs.Count + " changelogs");
 			changesLoaded = true;
 			changelogSelection = settings.defaultChangelogSelection
 				&& changelogs.Count > 1;
 			// Keep alive if another mod bypasses the main menu
 			DontDestroyOnLoad(this);
-		}
-
-		private IEnumerable<Changelog> LoadChangelogs(GameDatabase db)
-		{
-			Debug.Log("[KCL] Loading changelogs...");
-			return db.GetConfigs("KERBALCHANGELOG")
-				.Select(cfg => new Changelog(cfg.config, cfg))
-				.Where(cl => cl.HasUnseen(seenVersions(cl.modName)));
 		}
 
 		private void OnGUI()
@@ -138,7 +129,9 @@ namespace KerbalChangelog
 			changelogScrollPos = GUILayout.BeginScrollView(
 				changelogScrollPos, skin.textArea
 			);
-			GUILayout.Label(dispcl.Body(seenVersions(dispcl.modName)), new GUIStyle(skin.label)
+			GUILayout.Label(
+				dispcl.Body(onlyNewChanges ? settings.SeenVersions(dispcl.modName) : null),
+				new GUIStyle(skin.label)
 			{
 				richText = true,
 				normal   = new GUIStyleState()
@@ -220,14 +213,6 @@ namespace KerbalChangelog
 			return GUILayout.Toggle(value, content, skin.toggle, GUILayout.Width(size.x + 24));
 		}
 
-		private List<string> seenVersions(string modName)
-		{
-			return settings.versionsSeen
-				.Where(vs => vs.modName == modName)
-				.SelectMany(vs => vs.versions.Select(sv => sv.version))
-				.ToList();
-		}
-
 		private static readonly float windowWidth  = 600f * Screen.width  / 1920f;
 		private static readonly float windowHeight = 800f * Screen.height / 1080f;
 
@@ -237,11 +222,8 @@ namespace KerbalChangelog
 		private Vector2 changelogScrollPos      = new Vector2();
 		private Vector2 quickSelectionScrollPos = new Vector2();
 
-		private List<Changelog> changelogs = new List<Changelog>();
 		private int dispIndex = 0;
 		private Changelog dispcl;
-
-		private ChangelogSettings settings;
 
 		private bool showChangelog = true;
 		private bool changesLoaded = false;

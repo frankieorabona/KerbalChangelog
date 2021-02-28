@@ -65,6 +65,21 @@ namespace KerbalChangelog
 		public List<VersionsSeen> versionsSeen = new List<VersionsSeen>();
 
 		/// <summary>
+		/// Return the versions of a mod that the user has seen
+		/// </summary>
+		/// <param name="modName">Name of the mods</param>
+		/// <returns>
+		/// List of versions user already saw, if any
+		/// </returns>
+		public List<string> SeenVersions(string modName)
+		{
+			return versionsSeen
+				.Where(vs => vs.modName == modName)
+				.SelectMany(vs => vs.versions.Select(sv => sv.version))
+				.ToList();
+		}
+
+		/// <summary>
 		/// Set a mod version as seen or unseen
 		/// </summary>
 		/// <param name="modName">Name of the mod</param>
