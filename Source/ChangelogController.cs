@@ -23,11 +23,6 @@ namespace KerbalChangelog
 		/// </summary>
 		public List<Changelog> changelogs;
 
-		/// <summary>
-		/// Whether to limit the display to things the user hasn't seen before
-		/// </summary>
-		public bool onlyNewChanges = true;
-
 		private void Start()
 		{
 			Debug.Log("[KCL] Starting up");
@@ -37,33 +32,31 @@ namespace KerbalChangelog
 				(Screen.height - windowHeight) / (2 * GameSettings.UI_SCALE),
 				windowWidth, windowHeight
 			);
+			// Force historical mode if there's nothing current
+			// (it's up to calling code to not start us if it doesn't want this)
+			numNewChanges  = changelogs.Count(cl => cl.HasUnseen(settings.SeenVersions(cl.modName)));
+			showOldChanges = numNewChanges < 1;
 			Debug.Log("[KCL] Displaying " + changelogs.Count + " changelogs");
 			changesLoaded = true;
 			changelogSelection = settings.defaultChangelogSelection
 				&& changelogs.Count > 1;
-			// Keep alive if another mod bypasses the main menu
-			DontDestroyOnLoad(this);
 		}
 
 		private void OnGUI()
 		{
 			if (!showChangelog || changelogs.Count == 0)
 			{
-				// Mark everything we saw as seen at close
-				foreach (var cl in changelogs)
-				{
-					foreach (var cs in cl.versions)
-					{
-						settings.SetSeen(cl.modName, cs, true);
-					}
-				}
-				settings.Save();
 				Destroy(this);
 				return;
 			}
 			// Can't access GUI.skin outside OnGUI
 			skin = settings.skinName == GUI.skin.name ? GUI.skin : HighLogic.Skin;
+			// Find one we're allowed to show
 			dispcl = changelogs[dispIndex];
+			if (!canShow(dispcl))
+			{
+				findValidIndex();
+			}
 			if (showChangelog && changesLoaded)
 			{
 				GUI.matrix = Matrix4x4.TRS(
@@ -108,6 +101,12 @@ namespace KerbalChangelog
 				}
 			}
 			GUILayout.FlexibleSpace();
+			GUI.enabled = numNewChanges > 0;
+			showOldChanges = WorkingToggle(
+				showOldChanges,
+				Localizer.Format("KerbalChangeLog_showOldChangesCheckboxCaption")
+			);
+			GUI.enabled = true;
 			if (changelogs.Count > 1)
 			{
 				if (GUILayout.Button(Localizer.Format("KerbalChangelog_listingButtonCaption"), skin.button))
@@ -119,7 +118,6 @@ namespace KerbalChangelog
 			{
 				skin = skin == HighLogic.Skin ? GUI.skin : HighLogic.Skin;
 				settings.skinName = skin.name;
-				settings.Save();
 			}
 			GUILayout.EndHorizontal();
 			GUILayout.Label(dispcl.Header(), new GUIStyle(skin.label)
@@ -130,7 +128,7 @@ namespace KerbalChangelog
 				changelogScrollPos, skin.textArea
 			);
 			GUILayout.Label(
-				dispcl.Body(onlyNewChanges ? settings.SeenVersions(dispcl.modName) : null),
+				dispcl.Body(showOldChanges ? null : settings.SeenVersions(dispcl.modName)),
 				new GUIStyle(skin.label)
 			{
 				richText = true,
@@ -143,25 +141,43 @@ namespace KerbalChangelog
 
 			GUILayout.EndScrollView();
 			GUILayout.BeginHorizontal();
-			if (changelogs.Count > 1)
+			if (showOldChanges ? changelogs.Count > 1 : numNewChanges > 1)
 			{
 				if (GUILayout.Button(Localizer.Format("KerbalChangelog_prevButtonCaption"), skin.button))
 				{
-					dispIndex = (dispIndex + changelogs.Count - 1) % changelogs.Count;
+					findValidIndex(false);
 				}
 			}
 			if (GUILayout.Button(Localizer.Format("KerbalChangelog_closeButtonCaption"), skin.button))
 			{
 				showChangelog = false;
 			}
-			if (changelogs.Count > 1)
+			if (showOldChanges ? changelogs.Count > 1 : numNewChanges > 1)
 			{
 				if (GUILayout.Button(Localizer.Format("KerbalChangelog_nextButtonCaption"), skin.button))
 				{
-					dispIndex = (dispIndex + 1) % changelogs.Count;
+					findValidIndex(true);
 				}
 			}
 			GUILayout.EndHorizontal();
+		}
+
+		private void findValidIndex(bool forwards = true)
+		{
+			// Never loop infinitely
+			int tried = 0;
+			do
+			{
+				dispIndex = forwards
+					? (dispIndex + 1) % changelogs.Count
+					: (dispIndex + changelogs.Count - 1) % changelogs.Count;
+				dispcl = changelogs[dispIndex];
+			} while (++tried < changelogs.Count && !canShow(dispcl));
+		}
+
+		private bool canShow(Changelog cl)
+		{
+			return showOldChanges || dispcl.HasUnseen(settings.SeenVersions(dispcl.modName));
 		}
 
 		private void DrawChangelogSelection(int id)
@@ -176,8 +192,13 @@ namespace KerbalChangelog
 			if (startHere != settings.defaultChangelogSelection)
 			{
 				settings.defaultChangelogSelection = startHere;
-				settings.Save();
 			}
+			GUI.enabled = numNewChanges > 0;
+			showOldChanges = WorkingToggle(
+				showOldChanges,
+				Localizer.Format("KerbalChangeLog_showOldChangesCheckboxCaption")
+			);
+			GUI.enabled = true;
 			if (GUILayout.Button(Localizer.Format("KerbalChangelog_closeListingButtonCaption"), skin.button))
 			{
 				changelogSelection = false;
@@ -186,17 +207,20 @@ namespace KerbalChangelog
 			{
 				skin = skin == HighLogic.Skin ? GUI.skin : HighLogic.Skin;
 				settings.skinName = skin.name;
-				settings.Save();
 			}
 			GUILayout.EndHorizontal();
 			quickSelectionScrollPos = GUILayout.BeginScrollView(quickSelectionScrollPos, skin.textArea);
 
 			foreach (Changelog cl in changelogs)
 			{
-				if (GUILayout.Button($"{cl.modName} {cl.highestVersion}", skin.button))
+				// Hide mods with no new changes if that checkbox is off
+				if (canShow(cl))
 				{
-					dispIndex = changelogs.IndexOf(cl);
-					changelogSelection = false;
+					if (GUILayout.Button($"{cl.modName} {cl.highestVersion}", skin.button))
+					{
+						dispIndex = changelogs.IndexOf(cl);
+						changelogSelection = false;
+					}
 				}
 			}
 			GUILayout.EndScrollView();
@@ -225,8 +249,10 @@ namespace KerbalChangelog
 		private int dispIndex = 0;
 		private Changelog dispcl;
 
-		private bool showChangelog = true;
-		private bool changesLoaded = false;
+		private bool showChangelog      = true;
+		private bool changesLoaded      = false;
 		private bool changelogSelection = false;
+		private int  numNewChanges      = 0;
+		private bool showOldChanges     = false;
 	}
 }

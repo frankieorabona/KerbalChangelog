@@ -15,14 +15,13 @@ namespace KerbalChangelog
 	{
 		private void Start()
 		{
-			// Keep alive if another mod bypasses the main menu
+			// Keep alive so we can save settings at exit
 			DontDestroyOnLoad(this);
 
-			settings = new ChangelogSettings(GameDatabase.Instance);
+			settings = ChangelogSettings.Load(GameDatabase.Instance);
 
-			var changelogs = GameDatabase.Instance.GetConfigs("KERBALCHANGELOG")
+			changelogs = GameDatabase.Instance.GetConfigs("KERBALCHANGELOG")
 				.Select(cfg => new Changelog(cfg.config, cfg))
-				.Where(cl => cl.HasUnseen(settings.SeenVersions(cl.modName)))
 				.ToList();
 
 			for (int i = changelogs.Count - 1; i >= 0; --i)
@@ -36,19 +35,33 @@ namespace KerbalChangelog
 					{
 						settings.SetSeen(cl.modName, cs, true);
 					}
-					changelogs.Remove(cl);
 				}
 			}
 
-			if (changelogs.Count > 0)
+			// Don't auto-open at start if the user's already seen everything
+			if (changelogs.Any(cl => cl.HasUnseen(settings.SeenVersions(cl.modName))))
 			{
-				controller = gameObject.AddComponent<ChangelogController>();
+				var controller = gameObject.AddComponent<ChangelogController>();
 				controller.settings   = settings;
 				controller.changelogs = changelogs;
 			}
 		}
 
-		private ChangelogSettings   settings;
-		private ChangelogController controller;
+		private void OnDisable()
+		{
+			// Mark everything we saw as seen at exit
+			foreach (var cl in changelogs)
+			{
+				foreach (var cs in cl.versions)
+				{
+					settings.SetSeen(cl.modName, cs, true);
+				}
+			}
+			// Note this also saves EVERYTHING to avoid saving seen versions too early
+			settings.Save();
+		}
+
+		private ChangelogSettings settings;
+		private List<Changelog>   changelogs;
 	}
 }

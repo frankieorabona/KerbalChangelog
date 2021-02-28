@@ -11,10 +11,26 @@ namespace KerbalChangelog
 	public class ChangelogSettings
 	{
 		/// <summary>
+		/// A factory method disguising a singleton
+		/// </summary>
+		/// <param name="db">Game database</param>
+		/// <returns>
+		/// Existing instance if exists, a new one otherwise
+		/// </returns>
+		public static ChangelogSettings Load(GameDatabase db)
+		{
+			if (Instance == null)
+			{
+				Instance = new ChangelogSettings(db);
+			}
+			return Instance;
+		}
+
+		/// <summary>
 		/// Initialize the settings. Load if already defined in the game db,
 		/// else start fresh.
 		/// </summary>
-		public ChangelogSettings(GameDatabase db)
+		private ChangelogSettings(GameDatabase db)
 		{
 			foreach (UrlDir.UrlConfig cfg in db.GetConfigs(nodeName))
 			{
@@ -27,6 +43,8 @@ namespace KerbalChangelog
 				saveFile = GetDefaultFile();
 			}
 		}
+
+		private static ChangelogSettings Instance = null;
 
 		/// <summary>
 		/// Save settings to disk, overwriting if already there or
