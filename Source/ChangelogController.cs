@@ -19,8 +19,8 @@ namespace KerbalChangelog
 			settings = new ChangelogSettings(GameDatabase.Instance);
 			// Set up the window
 			displayWindow = new Rect(
-				(Screen.width  - windowWidth)  / 2,
-				(Screen.height - windowHeight) / 2,
+				(Screen.width  - windowWidth)  / (2 * GameSettings.UI_SCALE),
+				(Screen.height - windowHeight) / (2 * GameSettings.UI_SCALE),
 				windowWidth, windowHeight
 			);
 			changelogs = LoadChangelogs(GameDatabase.Instance).ToList();
@@ -73,29 +73,35 @@ namespace KerbalChangelog
 			// Can't access GUI.skin outside OnGUI
 			skin = settings.skinName == GUI.skin.name ? GUI.skin : HighLogic.Skin;
 			dispcl = changelogs[dispIndex];
-			if (showChangelog && changesLoaded && !changelogSelection)
+			if (showChangelog && changesLoaded)
 			{
-				displayWindow = GUILayout.Window(
-					89156,
-					displayWindow,
-					DrawChangelogWindow,
-					dispcl.modName + " " + dispcl.highestVersion.ToStringVersionName(),
-					skin.window,
-					GUILayout.Width(windowWidth),
-					GUILayout.Height(windowHeight)
+				GUI.matrix = Matrix4x4.TRS(
+					Vector3.zero, Quaternion.identity, new Vector3(GameSettings.UI_SCALE, GameSettings.UI_SCALE, 1f)
 				);
-			}
-			else if (showChangelog && changesLoaded && changelogSelection)
-			{
-				displayWindow = GUILayout.Window(
-					89157,
-					displayWindow,
-					DrawChangelogSelection,
-					Localizer.Format("KerbalChangelog_listingTitle"),
-					skin.window,
-					GUILayout.Width(windowWidth),
-					GUILayout.Height(windowHeight)
-				);
+				if (!changelogSelection)
+				{
+					displayWindow = GUILayout.Window(
+						89156,
+						displayWindow,
+						DrawChangelogWindow,
+						dispcl.modName + " " + dispcl.highestVersion.ToStringVersionName(),
+						skin.window,
+						GUILayout.Width(windowWidth / GameSettings.UI_SCALE),
+						GUILayout.Height(windowHeight / GameSettings.UI_SCALE)
+					);
+				}
+				else
+				{
+					displayWindow = GUILayout.Window(
+						89157,
+						displayWindow,
+						DrawChangelogSelection,
+						Localizer.Format("KerbalChangelog_listingTitle"),
+						skin.window,
+						GUILayout.Width(windowWidth / GameSettings.UI_SCALE),
+						GUILayout.Height(windowHeight / GameSettings.UI_SCALE)
+					);
+				}
 			}
 		}
 
@@ -128,7 +134,7 @@ namespace KerbalChangelog
 			GUILayout.Label(dispcl.Header(), new GUIStyle(skin.label)
 			{
 				richText = true,
-			});
+			}, GUILayout.ExpandWidth(true));
 			changelogScrollPos = GUILayout.BeginScrollView(
 				changelogScrollPos, skin.textArea
 			);
@@ -140,7 +146,7 @@ namespace KerbalChangelog
 					textColor  = skin.textArea.normal.textColor,
 					background = skin.label.normal.background,
 				},
-			});
+			}, GUILayout.ExpandWidth(true));
 
 			GUILayout.EndScrollView();
 			GUILayout.BeginHorizontal();
