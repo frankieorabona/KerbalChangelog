@@ -11,8 +11,6 @@ To add a changelog, create a config file (.cfg) with the following nodes and fie
 	// Must use this node name
 	KERBALCHANGELOG
 	{
-		// To show the changelog, this must be set to True
-		showChangelog = True
 		// Add your mod's name here
 		modName = Kerbal Changelog
 		// Declares a version node

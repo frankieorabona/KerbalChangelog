@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace KerbalChangelog
 {
@@ -57,6 +58,39 @@ namespace KerbalChangelog
 		[Persistent]
 		public string skinName = "";
 
+		/// <summary>
+		/// Things the use has already seen
+		/// </summary>
+		[Persistent]
+		public List<VersionsSeen> versionsSeen = new List<VersionsSeen>();
+
+		/// <summary>
+		/// Set a mod version as seen or unseen
+		/// </summary>
+		/// <param name="modName">Name of the mod</param>
+		/// <param name="version">Descriptor of the version</param>
+		/// <param name="seen">true if seen ,false if unseen</param>
+		public void SetSeen(string modName, string version, bool seen)
+		{
+			var mod = versionsSeen.FirstOrDefault(vs => vs.modName == modName);
+			if (mod == null)
+			{
+				mod = new VersionsSeen() { modName = modName };
+				versionsSeen.Add(mod);
+			}
+			if (seen)
+			{
+				if (!mod.versions.Any(sv => sv.version == version))
+				{
+					mod.versions.Add(new SeenVersion() { version = version });
+				}
+			}
+			else
+			{
+				mod.versions.RemoveAll(sv => sv.version == version);
+			}
+		}
+
 		private UrlDir.UrlFile GetDefaultFile()
 		{
 			var gameData = GameDatabase.Instance.root.children
@@ -69,6 +103,36 @@ namespace KerbalChangelog
 
 		private const string nodeName = "KERBALCHANGELOGSETTINGS";
 		private UrlDir.UrlFile saveFile = null;
+	}
+
+	/// <summary>
+	/// Represents the versions of a particular mod that the user has already seen
+	/// </summary>
+	public class VersionsSeen
+	{
+		/// <summary>
+		/// Name of the mod
+		/// </summary>
+		[Persistent]
+		public string modName = "";
+
+		/// <summary>
+		/// Versions the user has seen
+		/// </summary>
+		[Persistent]
+		public List<SeenVersion> versions = new List<SeenVersion>();
+	}
+
+	/// <summary>
+	/// A version the user has seen
+	/// </summary>
+	public class SeenVersion
+	{
+		/// <summary>
+		/// The version
+		/// </summary>
+		[Persistent]
+		public string version;
 	}
 
 }

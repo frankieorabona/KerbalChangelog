@@ -23,7 +23,21 @@ namespace KerbalChangelog
 				(Screen.height - windowHeight) / 2,
 				windowWidth, windowHeight
 			);
-			changelogs = LoadChangelogs();
+			changelogs = LoadChangelogs(GameDatabase.Instance).ToList();
+			for (int i = changelogs.Count - 1; i >= 0; --i)
+			{
+				var cl = changelogs[i];
+				if (cl.alreadySeen)
+				{
+					// A previous version displayed these changes,
+					// mark them as seen so they'll be hidden in the next update
+					foreach (var cs in cl.versions)
+					{
+						settings.SetSeen(cl.modName, cs, true);
+					}
+					changelogs.Remove(cl);
+				}
+			}
 			Debug.Log("[KCL] Displaying " + changelogs.Count + " changelogs");
 			changesLoaded = true;
 			changelogSelection = settings.defaultChangelogSelection
@@ -32,32 +46,27 @@ namespace KerbalChangelog
 			DontDestroyOnLoad(this);
 		}
 
-		private List<Changelog> LoadChangelogs()
+		private IEnumerable<Changelog> LoadChangelogs(GameDatabase db)
 		{
 			Debug.Log("[KCL] Loading changelogs...");
-			var retList = new List<Changelog>();
-			UrlDir.UrlConfig[] cfgDirs = GameDatabase.Instance.GetConfigs("KERBALCHANGELOG");
-			foreach (var cfgDir in cfgDirs)
-			{
-				// Loads the config node from the directory
-				ConfigNode kclNode = cfgDir.config;
-				retList.Add(new Changelog(kclNode, cfgDir));
-
-				// Sets changelogs to unviewable
-				if (!kclNode.SetValue("showChangelog", false))
-				{
-					Debug.Log("[KCL] Unable to set value 'showChangelog' in " + cfgDir.ToString());
-				}
-				cfgDir.parent.SaveConfigs();
-			}
-			Debug.Log("[KCL] Loaded " + retList.Count + " valid changelogs");
-			return retList.Where(cl => cl.showCL).ToList();
+			return db.GetConfigs("KERBALCHANGELOG")
+				.Select(cfg => new Changelog(cfg.config, cfg))
+				.Where(cl => cl.HasUnseen(seenVersions(cl.modName)));
 		}
 
 		private void OnGUI()
 		{
 			if (!showChangelog || changelogs.Count == 0)
 			{
+				// Mark everything we saw as seen at close
+				foreach (var cl in changelogs)
+				{
+					foreach (var cs in cl.versions)
+					{
+						settings.SetSeen(cl.modName, cs, true);
+					}
+				}
+				settings.Save();
 				Destroy(this);
 				return;
 			}
@@ -123,7 +132,7 @@ namespace KerbalChangelog
 			changelogScrollPos = GUILayout.BeginScrollView(
 				changelogScrollPos, skin.textArea
 			);
-			GUILayout.Label(dispcl.Body(), new GUIStyle(skin.label)
+			GUILayout.Label(dispcl.Body(seenVersions(dispcl.modName)), new GUIStyle(skin.label)
 			{
 				richText = true,
 				normal   = new GUIStyleState()
@@ -203,6 +212,14 @@ namespace KerbalChangelog
 			var content = new GUIContent(caption);
 			var size = skin.textField.CalcSize(content);
 			return GUILayout.Toggle(value, content, skin.toggle, GUILayout.Width(size.x + 24));
+		}
+
+		private List<string> seenVersions(string modName)
+		{
+			return settings.versionsSeen
+				.Where(vs => vs.modName == modName)
+				.SelectMany(vs => vs.versions.Select(sv => sv.version))
+				.ToList();
 		}
 
 		private static readonly float windowWidth  = 600f * Screen.width  / 1920f;
