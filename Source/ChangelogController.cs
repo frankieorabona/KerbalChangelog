@@ -91,7 +91,6 @@ namespace KerbalChangelog
 
 		private void DrawChangelogWindow(int id)
 		{
-			GUI.DragWindow(new Rect(0, 0, displayWindow.width, 20));
 			GUILayout.BeginHorizontal();
 			if (dispcl.webpageValid)
 			{
@@ -160,6 +159,7 @@ namespace KerbalChangelog
 				}
 			}
 			GUILayout.EndHorizontal();
+			GUI.DragWindow();
 		}
 
 		private void findValidIndex(bool forwards = true)
@@ -182,7 +182,6 @@ namespace KerbalChangelog
 
 		private void DrawChangelogSelection(int id)
 		{
-			GUI.DragWindow(new Rect(0, 0, displayWindow.width, 20));
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
 			var startHere = WorkingToggle(
@@ -228,6 +227,7 @@ namespace KerbalChangelog
 			{
 				showChangelog = false;
 			}
+			GUI.DragWindow();
 		}
 
 		private bool WorkingToggle(bool value, string caption)
