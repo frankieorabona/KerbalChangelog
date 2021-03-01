@@ -177,7 +177,7 @@ namespace KerbalChangelog
 
 		private bool canShow(Changelog cl)
 		{
-			return showOldChanges || dispcl.HasUnseen(settings.SeenVersions(dispcl.modName));
+			return showOldChanges || cl.HasUnseen(settings.SeenVersions(cl.modName));
 		}
 
 		private void DrawChangelogSelection(int id)
