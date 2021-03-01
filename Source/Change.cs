@@ -49,6 +49,9 @@ namespace KerbalChangelog
 			{
 				switch (changeType.Substring(0, 1).ToUpper())
 				{
+					case "H":
+						type = ChangeType.HighPriority;
+						break;
 					case "A":
 						type = ChangeType.Add;
 						break;
@@ -67,8 +70,8 @@ namespace KerbalChangelog
 					case "S":
 						type = ChangeType.Security;
 						break;
-					case "H":
-						type = ChangeType.HighPriority;
+					case "P":
+						type = ChangeType.Performance;
 						break;
 					default:
 						type = ChangeType.None;
