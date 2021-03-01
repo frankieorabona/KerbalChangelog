@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.Localization;
 
 namespace KerbalChangelog
 {
@@ -130,11 +131,11 @@ namespace KerbalChangelog
 			var lines = new List<string> { $"<b><size=24>{modName}</size></b>" };
 			if (!string.IsNullOrEmpty(author))
 			{
-				lines.Add($"Created by: {author}");
+				lines.Add(Localizer.Format("KerbalChangelog_authorLabel", author));
 			}
 			if (!string.IsNullOrEmpty(license))
 			{
-				lines.Add($"Licensed under the {license} license");
+				lines.Add(Localizer.Format("KerbalChangelog_licenseLabel", license));
 			}
 			return string.Join("\n", lines);
 		}
