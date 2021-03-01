@@ -38,8 +38,9 @@ namespace KerbalChangelog
 			showOldChanges = numNewChanges < 1;
 			Debug.Log("[KCL] Displaying " + changelogs.Count + " changelogs");
 			changesLoaded = true;
+			// For 0 new we show all, for >1 new we show multiple, for 1 we show the 1
 			changelogSelection = settings.defaultChangelogSelection
-				&& changelogs.Count > 1;
+				&& numNewChanges != 1;
 		}
 
 		private void OnGUI()
