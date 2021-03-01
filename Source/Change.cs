@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.Localization;
 
 namespace KerbalChangelog
 {
@@ -81,6 +82,36 @@ namespace KerbalChangelog
 			foreach (string sc in chn.GetValues("subchange"))
 			{
 				subchanges.Add(sc);
+			}
+		}
+
+		/// <returns>
+		/// Localized string description of the type of this change
+		/// </returns>
+		public string TypeString()
+		{
+			switch (type)
+			{
+				case ChangeType.HighPriority:
+					return Localizer.Format("KerbalChangelog_ChangeTypeHighPriority");
+				case ChangeType.Add:
+					return Localizer.Format("KerbalChangelog_ChangeTypeAdd");
+				case ChangeType.Change:
+					return Localizer.Format("KerbalChangelog_ChangeTypeChange");
+				case ChangeType.Deprecate:
+					return Localizer.Format("KerbalChangelog_ChangeTypeDeprecate");
+				case ChangeType.Remove:
+					return Localizer.Format("KerbalChangelog_ChangeTypeRemove");
+				case ChangeType.Fix:
+					return Localizer.Format("KerbalChangelog_ChangeTypeFix");
+				case ChangeType.Security:
+					return Localizer.Format("KerbalChangelog_ChangeTypeSecurity");
+				case ChangeType.Performance:
+					return Localizer.Format("KerbalChangelog_ChangeTypePerformance");
+				case ChangeType.None:
+					return Localizer.Format("KerbalChangelog_ChangeTypeNone");
+				default:
+					return "";
 			}
 		}
 

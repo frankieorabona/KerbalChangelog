@@ -79,10 +79,7 @@ namespace KerbalChangelog
 				{
 					if (c.type != ChangeType.None)
 					{
-						var typeStr = c.type == ChangeType.HighPriority
-							? "High Priority"
-							: c.type.ToString();
-						ret += $"<b>{typeStr}</b>\n";
+						ret += $"<b>{c.TypeString()}</b>\n";
 					}
 					curType = c.type;
 				}
