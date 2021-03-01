@@ -1,7 +1,7 @@
 {
 	"NAME": "KerbalChangelog",
 	"URL": "https://raw.githubusercontent.com/HebaruSan/KerbalChangelog/master/GameData/KerbalChangelog/KerbalChangelog.version",
-	"DOWNLOAD": "https://github.com/HebaruSan/KerbalChangelog/releases/download/v1.4.1/KerbalChangelog.zip",
+	"DOWNLOAD": "https://github.com/HebaruSan/KerbalChangelog/releases/download/v1.4.2/KerbalChangelog.zip",
 	"GITHUB": {
 		"USERNAME": "HebaruSan",
 		"REPOSITORY": "KerbalChangelog",
@@ -10,7 +10,7 @@
 	"VERSION": {
 		"MAJOR": 1,
 		"MINOR": 4,
-		"PATCH": 1
+		"PATCH": 2
 	},
 	"KSP_VERSION": {
 		"MAJOR": 1,
