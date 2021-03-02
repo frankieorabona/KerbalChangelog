@@ -61,16 +61,12 @@ namespace KerbalChangelog
 			}
 			string _website = "";
 			cn.TryGetValue("website", ref _website); 
-			webpage = _website;
-			if (webpage != "")
+			website = _website;
+			if (website != "")
 			{
-				webpageValid = ValidateWebsite(webpage);
+				websiteValid = ValidateWebsite(website);
 			}
-
-			foreach (ConfigNode vn in cn.GetNodes("VERSION"))
-			{
-				changeSets.Add(new ChangeSet(vn, cfgDirName));
-			}
+			changeSets = cn.GetNodes("VERSION").Select(vn => new ChangeSet(vn, cfgDirName)).ToList();
 		}
 
 		/// <summary>
@@ -88,11 +84,11 @@ namespace KerbalChangelog
 		/// <summary>
 		/// Home page of the mod
 		/// </summary>
-		public string webpage      { get; private set; } = null;
+		public string website      { get; private set; } = null;
 		/// <summary>
 		/// True if the home page is a valid URL, false otherwise
 		/// </summary>
-		public bool   webpageValid { get; private set; } = false;
+		public bool   websiteValid { get; private set; } = false;
 		/// <summary>
 		/// Whether a previous version of KerbalChangelog displayed this already
 		/// </summary>
@@ -165,17 +161,8 @@ namespace KerbalChangelog
 
 		private bool ValidateWebsite(string url)
 		{
-			Debug.Log("Validating url: " + url);
-			string uri = @"https://" + url;
-			Debug.Log(uri);
-			Uri siteuri = new Uri(uri);
-			string site = siteuri.Host;
-
-			if (validHosts.Contains(site))
-			{
-				return true;
-			}
-			return false;
+			Debug.Log("[KCL] Validating url: " + url);
+			return validHosts.Contains(new Uri($"https://{url}").Host.ToLower());
 		}
 
 		private static readonly HashSet<string> validHosts = new HashSet<string>()
@@ -183,14 +170,14 @@ namespace KerbalChangelog
 			"github.com", 
 			"forum.kerbalspaceprogram.com", 
 			"kerbaltek.com", 
-			"KerbalX.com", 
+			"kerbalx.com", 
 			"spacedock.info", 
 			"kerbokatz.github.io", 
 			"krpc.github.io", 
 			"genhis.github.io", 
 			"snjo.github.io",
 			"www.curseforge.com",
-			"ksp.sarbian.com"
+			"ksp.sarbian.com",
 		};
 
 		private List<ChangeSet> changeSets = new List<ChangeSet>();

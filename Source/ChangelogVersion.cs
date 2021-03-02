@@ -12,58 +12,6 @@ namespace KerbalChangelog
 	{
 		/// <summary>
 		/// Initialize a version
-		/// </summary>
-		/// <param name="maj">Major version</param>
-		/// <param name="min">Minor version</param>
-		/// <param name="pat">Patch version</param>
-		public ChangelogVersion(int maj, int min, int pat)
-		{
-			major = maj;
-			minor = min;
-			patch = pat;
-			buildExisted = false;
-		}
-
-		/// <summary>
-		/// Initialize a version
-		/// </summary>
-		/// <param name="maj">Major version</param>
-		/// <param name="min">Minor version</param>
-		/// <param name="pat">Patch version</param>
-		/// <param name="bui">Build version</param>
-		public ChangelogVersion(int maj, int min, int pat, int bui) : this(maj, min, pat)
-		{
-			build = bui;
-			buildExisted = true;
-		}
-
-		/// <summary>
-		/// Initialize a version
-		/// </summary>
-		/// <param name="maj">Major version</param>
-		/// <param name="min">Minor version</param>
-		/// <param name="pat">Patch version</param>
-		/// <param name="vName">String description of the version</param>
-		public ChangelogVersion(int maj, int min, int pat, string vName) : this(maj, min, pat)
-		{
-			versionName = vName;
-		}
-
-		/// <summary>
-		/// Initialize a version
-		/// </summary>
-		/// <param name="maj">Major version</param>
-		/// <param name="min">Minor version</param>
-		/// <param name="pat">Patch version</param>
-		/// <param name="bui">Build version</param>
-		/// <param name="vName">String description of the version</param>
-		public ChangelogVersion(int maj, int min, int pat, int bui, string vName) : this(maj, min, pat, bui)
-		{
-			versionName = vName;
-		}
-
-		/// <summary>
-		/// Initialize a version
 		/// May fail, needs a try/catch
 		/// </summary>
 		/// <param name="version">String to parse to get the version info</param>
@@ -73,36 +21,18 @@ namespace KerbalChangelog
 			if (version == "null")
 			{
 				versionNull = true;
-				return;
 			}
-
-			if (!pattern.IsMatch(version))
+			else
 			{
-				if (!malformedPattern.IsMatch(version))
+				var match = pattern.Match(version);
+				if (!match.Success)
 				{
-					Debug.Log("[KCL] broken version string: " + version);
-					throw new ArgumentException("version is not a valid version");
+					throw new ArgumentException($"Invalid version: {version}");
 				}
-				Debug.Log("[KCL] malformed version string: " + version + " in directory " + cfgDirName);
-				malformedVersionString = true;
-			}
-			string[] splitVersions = version.Split('.');
-
-			major = int.Parse(splitVersions[0]);
-			minor = int.Parse(splitVersions[1]);
-			if (!malformedVersionString)
-				patch = int.Parse(splitVersions[2]);
-			else
-				patch = 0;
-			if (splitVersions.Length > 3)
-			{
-				build = int.Parse(splitVersions[3]);
-				buildExisted = true;
-			}
-			else
-			{
-				build = 0;
-				buildExisted = false;
+				major = int.Parse(match.Groups["major"].Value);
+				minor = int.Parse(match.Groups["minor"].Value);
+				patch = match.Groups["patch"].Success ? int.Parse(match.Groups["patch"].Value) : 0;
+				build = match.Groups["build"].Success ? (int?)int.Parse(match.Groups["build"].Value) : null;
 			}
 		}
 
@@ -141,7 +71,7 @@ namespace KerbalChangelog
 		{
 			return versionNull
 				? Localizer.Format("KerbalChangelog_versionDoesNotExist")
-				: buildExisted
+				: build.HasValue
 					? versionNameExists
 						? versionDateExists
 							? versionKSPExists
@@ -197,7 +127,7 @@ namespace KerbalChangelog
 		{
 			return versionNull
 				? Localizer.Format("KerbalChangelog_versionDoesNotExist")
-				: buildExisted
+				: build.HasValue
 					? Localizer.Format("KerbalChangelog_versionFourPiece",
 						major, minor, patch, build)
 					: Localizer.Format("KerbalChangelog_versionThreePiece",
@@ -211,7 +141,7 @@ namespace KerbalChangelog
 		{
 			return versionNull
 				? Localizer.Format("KerbalChangelog_versionDoesNotExist")
-				: buildExisted
+				: build.HasValue
 					? versionNameExists
 						? Localizer.Format("KerbalChangelog_versionFourPieceWithName",
 							major, minor, patch, build, versionName)
@@ -229,7 +159,7 @@ namespace KerbalChangelog
 		/// </summary>
 		/// <param name="obj">Another version</param>
 		/// <returns>
-		/// -1 if this&lt;obj, 1 if this&gt;obj, 0 if this==obj
+		/// 1 if this&lt;obj, -1 if this&gt;obj, 0 if this==obj
 		/// </returns>
 		public int CompareTo(object obj)
 		{
@@ -240,19 +170,25 @@ namespace KerbalChangelog
 
 			if (obj is ChangelogVersion oCLV)
 			{
-				if (oCLV.major - this.major == 0)
+				int majCmp = oCLV.major.CompareTo(major);
+				if (majCmp != 0)
 				{
-					if (oCLV.minor - this.minor == 0)
-					{
-						if (oCLV.patch - this.patch == 0)
-						{
-							return oCLV.build.CompareTo(this.build);
-						}
-						return oCLV.patch.CompareTo(this.patch);
-					}
-					return oCLV.minor.CompareTo(this.minor);
+					return majCmp;
 				}
-				return oCLV.major.CompareTo(this.major);
+				int minCmp = oCLV.minor.CompareTo(minor);
+				if (minCmp != 0)
+				{
+					return minCmp;
+				}
+				int patCmp = oCLV.patch.CompareTo(patch);
+				if (patCmp != 0)
+				{
+					return patCmp;
+				}
+				return oCLV.build.HasValue && build.HasValue ? oCLV.build.Value.CompareTo(build.Value)
+					: oCLV.build.HasValue ?  1
+					: build.HasValue      ? -1
+					: 0;
 			}
 			else
 			{
@@ -262,23 +198,16 @@ namespace KerbalChangelog
 
 		// Matches version numbers starting at the beginning to the end of the string
 		private static readonly Regex pattern = new Regex(
-			"(\\d+\\.\\d+\\.\\d+(\\.\\d+)?)",
-			RegexOptions.Compiled
-		);
-		private static readonly Regex malformedPattern = new Regex(
-			"\\d+\\.\\d+(\\.\\d+)?(\\.\\d+)?",
+			@"^(?<major>\d+)\.(?<minor>\d+)(?:\.(?<patch>\d+))?(?:\.(?<build>\d+))?$",
 			RegexOptions.Compiled
 		);
 
 		private bool versionNull = false;
-		private bool malformedVersionString = false;
 
-		private int major { get; set; }
-		private int minor { get; set; }
-		private int patch { get; set; }
-		private int build { get; set; }
-
-		private bool buildExisted;
+		private int  major { get; set; }
+		private int  minor { get; set; }
+		private int  patch { get; set; }
+		private int? build { get; set; } = null;
 
 		private string versionName { get; set; } = null;
 		private string versionDate { get; set; } = null;

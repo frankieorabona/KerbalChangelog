@@ -14,12 +14,12 @@ namespace KerbalChangelog
 	public class ChangelogController : MonoBehavior
 	{
 		/// <summary>
-		/// Settings to use
+		/// Settings to use, must be set by calling code before Start
 		/// </summary>
 		public ChangelogSettings settings;
 
 		/// <summary>
-		/// Changelogs to display
+		/// Changelogs to display, must be set by calling code before Start
 		/// </summary>
 		public List<Changelog> changelogs;
 
@@ -27,10 +27,10 @@ namespace KerbalChangelog
 		{
 			Debug.Log("[KCL] Starting up");
 			// Set up the window
-			displayWindow = new Rect(
+			windowRect = new Rect(
 				(Screen.width  - windowWidth)  / (2 * GameSettings.UI_SCALE),
 				(Screen.height - windowHeight) / (2 * GameSettings.UI_SCALE),
-				windowWidth, windowHeight
+				windowWidth / GameSettings.UI_SCALE, windowHeight / GameSettings.UI_SCALE
 			);
 			// Force historical mode if there's nothing current
 			// (it's up to calling code to not start us if it doesn't want this)
@@ -60,31 +60,25 @@ namespace KerbalChangelog
 			}
 			if (showChangelog && changesLoaded)
 			{
-				GUI.matrix = Matrix4x4.TRS(
-					Vector3.zero, Quaternion.identity, new Vector3(GameSettings.UI_SCALE, GameSettings.UI_SCALE, 1f)
-				);
+				GUI.matrix = Matrix4x4.Scale(new Vector3(GameSettings.UI_SCALE, GameSettings.UI_SCALE, 1f));
 				if (!changelogSelection)
 				{
-					displayWindow = GUILayout.Window(
+					windowRect = GUILayout.Window(
 						89156,
-						displayWindow,
+						windowRect,
 						DrawChangelogWindow,
 						dispcl.modName + " " + dispcl.highestVersion.ToStringVersionName(),
-						skin.window,
-						GUILayout.Width(windowWidth / GameSettings.UI_SCALE),
-						GUILayout.Height(windowHeight / GameSettings.UI_SCALE)
+						skin.window
 					);
 				}
 				else
 				{
-					displayWindow = GUILayout.Window(
+					windowRect = GUILayout.Window(
 						89157,
-						displayWindow,
+						windowRect,
 						DrawChangelogSelection,
 						Localizer.Format("KerbalChangelog_listingTitle"),
-						skin.window,
-						GUILayout.Width(windowWidth / GameSettings.UI_SCALE),
-						GUILayout.Height(windowHeight / GameSettings.UI_SCALE)
+						skin.window
 					);
 				}
 			}
@@ -93,11 +87,11 @@ namespace KerbalChangelog
 		private void DrawChangelogWindow(int id)
 		{
 			GUILayout.BeginHorizontal();
-			if (dispcl.webpageValid)
+			if (dispcl.websiteValid)
 			{
 				if (GUILayout.Button(Localizer.Format("KerbalChangelog_webpageButtonCaption"), skin.button))
 				{
-					Application.OpenURL("https://" + dispcl.webpage);
+					Application.OpenURL("https://" + dispcl.website);
 				}
 			}
 			GUILayout.FlexibleSpace();
@@ -124,20 +118,20 @@ namespace KerbalChangelog
 			{
 				richText = true,
 			}, GUILayout.ExpandWidth(true));
-			changelogScrollPos = GUILayout.BeginScrollView(
-				changelogScrollPos, skin.textArea
-			);
+			changelogScrollPos = GUILayout.BeginScrollView(changelogScrollPos, skin.textArea);
 			GUILayout.Label(
 				dispcl.Body(showOldChanges ? null : settings.SeenVersions(dispcl.modName)),
 				new GUIStyle(skin.label)
-			{
-				richText = true,
-				normal   = new GUIStyleState()
 				{
-					textColor  = skin.textArea.normal.textColor,
-					background = skin.label.normal.background,
+					richText = true,
+					normal   = new GUIStyleState()
+					{
+						textColor  = skin.textArea.normal.textColor,
+						background = skin.label.normal.background,
+					},
 				},
-			}, GUILayout.ExpandWidth(true));
+				GUILayout.ExpandWidth(true)
+			);
 
 			GUILayout.EndScrollView();
 			GUILayout.BeginHorizontal();
@@ -161,24 +155,6 @@ namespace KerbalChangelog
 			}
 			GUILayout.EndHorizontal();
 			GUI.DragWindow();
-		}
-
-		private void findValidIndex(bool forwards = true)
-		{
-			// Never loop infinitely
-			int tried = 0;
-			do
-			{
-				dispIndex = forwards
-					? (dispIndex + 1) % changelogs.Count
-					: (dispIndex + changelogs.Count - 1) % changelogs.Count;
-				dispcl = changelogs[dispIndex];
-			} while (++tried < changelogs.Count && !canShow(dispcl));
-		}
-
-		private bool canShow(Changelog cl)
-		{
-			return showOldChanges || cl.HasUnseen(settings.SeenVersions(cl.modName));
 		}
 
 		private void DrawChangelogSelection(int id)
@@ -211,16 +187,12 @@ namespace KerbalChangelog
 			GUILayout.EndHorizontal();
 			quickSelectionScrollPos = GUILayout.BeginScrollView(quickSelectionScrollPos, skin.textArea);
 
-			foreach (Changelog cl in changelogs)
+			foreach (Changelog cl in changelogs.Where(canShow))
 			{
-				// Hide mods with no new changes if that checkbox is off
-				if (canShow(cl))
+				if (GUILayout.Button($"{cl.modName} {cl.highestVersion}", skin.button))
 				{
-					if (GUILayout.Button($"{cl.modName} {cl.highestVersion}", skin.button))
-					{
-						dispIndex = changelogs.IndexOf(cl);
-						changelogSelection = false;
-					}
+					dispIndex = changelogs.IndexOf(cl);
+					changelogSelection = false;
 				}
 			}
 			GUILayout.EndScrollView();
@@ -229,6 +201,24 @@ namespace KerbalChangelog
 				showChangelog = false;
 			}
 			GUI.DragWindow();
+		}
+
+		private void findValidIndex(bool forwards = true)
+		{
+			// Never loop infinitely
+			int tried = 0;
+			do
+			{
+				dispIndex = forwards
+					? (dispIndex + 1) % changelogs.Count
+					: (dispIndex + changelogs.Count - 1) % changelogs.Count;
+				dispcl = changelogs[dispIndex];
+			} while (++tried < changelogs.Count && !canShow(dispcl));
+		}
+
+		private bool canShow(Changelog cl)
+		{
+			return showOldChanges || cl.HasUnseen(settings.SeenVersions(cl.modName));
 		}
 
 		private bool WorkingToggle(bool value, string caption)
@@ -243,11 +233,11 @@ namespace KerbalChangelog
 
 		private GUISkin skin;
 
-		private Rect displayWindow;
+		private Rect    windowRect;
 		private Vector2 changelogScrollPos      = new Vector2();
 		private Vector2 quickSelectionScrollPos = new Vector2();
 
-		private int dispIndex = 0;
+		private int       dispIndex = 0;
 		private Changelog dispcl;
 
 		private bool showChangelog      = true;

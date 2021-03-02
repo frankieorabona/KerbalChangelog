@@ -11,7 +11,7 @@ namespace KerbalChangelog
 	/// and launches the popup if needed
 	/// </summary>
 	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
-	public class ChangelogMainMenu : MonoBehavior
+	public class ChangelogAddonMainMenu : MonoBehavior
 	{
 		private void Start()
 		{

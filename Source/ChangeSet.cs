@@ -28,8 +28,8 @@ namespace KerbalChangelog
 		/// <param name="cfgDirName">Path where we found this file</param>
 		public ChangeSet(ConfigNode vn, string cfgDirName)
 		{
-			//TryGetValue returns true if the node exists, and false if the node doesn't
-			//By negating the value it allows you to catch bad TryGets
+			// TryGetValue returns true if the node exists, and false if the node doesn't
+			// By negating the value it allows you to catch bad TryGets
 			string _version = "";
 			if (!vn.TryGetValue("version", ref _version))
 			{
@@ -45,12 +45,12 @@ namespace KerbalChangelog
 
 			version = new ChangelogVersion(_version, cfgDirName, _versionName, _versionDate, _versionKSP);
 
-			//loads change fields (needed for backwards compatibility
+			// Loads change fields (needed for backwards compatibility
 			foreach (string change in vn.GetValues("change"))
 			{
 				changes.Add(new Change(change, new List<string>()));
 			}
-			//loads change nodes
+			// Loads change nodes
 			foreach (ConfigNode chn in vn.GetNodes("CHANGE"))
 			{
 				changes.Add(new Change(chn, cfgDirName));
@@ -69,8 +69,6 @@ namespace KerbalChangelog
 		public override string ToString()
 		{
 			string ret = $"<b><size=20>{version}</size></b>\n";
-			Change prev = null;
-
 			ChangeType? curType = null;
 
 			foreach (Change c in changes)
@@ -84,7 +82,6 @@ namespace KerbalChangelog
 					curType = c.type;
 				}
 				ret += c.ToString();
-				prev = c;
 			}
 			return ret;
 		}
