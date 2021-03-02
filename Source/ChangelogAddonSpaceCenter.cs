@@ -20,6 +20,9 @@ namespace KerbalChangelog
 
 			// This event fires when KSP wants mods to remove their toolbar buttons
 			GameEvents.onGUIApplicationLauncherDestroyed.Add(RemoveLauncher);
+
+			// Try to find the popup if it's already open
+			controller = FindObjectsOfType<ChangelogController>().FirstOrDefault();
 		}
 
 		private void OnDisable()
