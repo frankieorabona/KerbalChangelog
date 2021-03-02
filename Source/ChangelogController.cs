@@ -61,23 +61,33 @@ namespace KerbalChangelog
 			if (showChangelog && changesLoaded)
 			{
 				GUI.matrix = Matrix4x4.Scale(new Vector3(GameSettings.UI_SCALE, GameSettings.UI_SCALE, 1f));
-				if (!changelogSelection)
-				{
-					windowRect = GUILayout.Window(
-						89156,
-						windowRect,
-						DrawChangelogWindow,
-						dispcl.modName + " " + dispcl.highestVersion.ToStringVersionName(),
-						skin.window
-					);
-				}
-				else
+				if (changelogSelection)
 				{
 					windowRect = GUILayout.Window(
 						89157,
 						windowRect,
 						DrawChangelogSelection,
 						Localizer.Format("KerbalChangelog_listingTitle"),
+						skin.window
+					);
+				}
+				else if (!showOldChanges)
+				{
+					windowRect = GUILayout.Window(
+						89157,
+						windowRect,
+						DrawCombinedWindow,
+						Localizer.Format("KerbalChangelog_combinedTitle", numNewChanges),
+						skin.window
+					);
+				}
+				else
+				{
+					windowRect = GUILayout.Window(
+						89156,
+						windowRect,
+						DrawChangelogWindow,
+						dispcl.modName + " " + dispcl.highestVersion.ToStringVersionName(),
 						skin.window
 					);
 				}
@@ -154,6 +164,63 @@ namespace KerbalChangelog
 				}
 			}
 			GUILayout.EndHorizontal();
+			GUI.DragWindow();
+		}
+
+		private void DrawCombinedWindow(int id)
+		{
+			GUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			showOldChanges = WorkingToggle(
+				showOldChanges,
+				Localizer.Format("KerbalChangeLog_showOldChangesCheckboxCaption")
+			);
+			if (GUILayout.Button(Localizer.Format("KerbalChangelog_skinButtonCaption"), skin.button))
+			{
+				skin = skin == HighLogic.Skin ? GUI.skin : HighLogic.Skin;
+				settings.skinName = skin.name;
+			}
+			GUILayout.EndHorizontal();
+			GUILayout.Space(8);
+			combinedScrollPos = GUILayout.BeginScrollView(combinedScrollPos, skin.textArea);
+			foreach (var cl in changelogs.Where(cl => cl.HasUnseen(settings.SeenVersions(cl.modName))))
+			{
+				GUILayout.Space(8);
+				GUILayout.BeginVertical(skin.box, GUILayout.ExpandWidth(true));
+				GUILayout.BeginHorizontal();
+				GUILayout.Label(cl.Header(), new GUIStyle(skin.label)
+				{
+					richText = true,
+				}, GUILayout.ExpandWidth(true));
+				if (cl.websiteValid)
+				{
+					if (GUILayout.Button(Localizer.Format("KerbalChangelog_webpageButtonCaption"),
+						skin.button, GUILayout.ExpandWidth(false)))
+					{
+						Application.OpenURL("https://" + cl.website);
+					}
+				}
+				GUILayout.EndHorizontal();
+				GUILayout.Label(
+					cl.Body(settings.SeenVersions(cl.modName)),
+					new GUIStyle(skin.label)
+					{
+						richText = true,
+						normal   = new GUIStyleState()
+						{
+							textColor  = skin.textArea.normal.textColor,
+							background = skin.label.normal.background,
+						},
+					},
+					GUILayout.ExpandWidth(true)
+				);
+				GUILayout.EndVertical();
+			}
+			GUILayout.EndScrollView();
+			if (GUILayout.Button(Localizer.Format("KerbalChangelog_closeButtonCaption"), skin.button))
+			{
+				showChangelog = false;
+			}
 			GUI.DragWindow();
 		}
 
@@ -236,6 +303,7 @@ namespace KerbalChangelog
 		private Rect    windowRect;
 		private Vector2 changelogScrollPos      = new Vector2();
 		private Vector2 quickSelectionScrollPos = new Vector2();
+		private Vector2 combinedScrollPos       = new Vector2();
 
 		private int       dispIndex = 0;
 		private Changelog dispcl;
